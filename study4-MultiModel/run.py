@@ -1,8 +1,8 @@
 import sys
-sys.path.append('.')
+sys.path.append('..')
 
-from model import *
-from data import *
+from multiModel.model import *
+from multiModel.data import *
 import argparse
 
 def initialize_dataset(mode):

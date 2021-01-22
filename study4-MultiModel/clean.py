@@ -115,7 +115,7 @@ def aggregate():
     print(annotator_dict)
     for i, row in df.iterrows():
         df.at[i, "username"] = annotator_dict[row["username"]]
-    json.dump(annotator_dict, open("annotators.json", "w"))
+    json.dump(annotator_dict, open("Data/annotators.json", "w"))
     df.to_csv("Data/annotations_id.csv", index=False)
 
     posts = pd.DataFrame.from_dict(anno_df)
@@ -123,7 +123,7 @@ def aggregate():
 
 def iat():
     df = pd.read_csv("Data/demo.csv")
-    anno = json.load(open("annotators.json", "r"))
+    anno = json.load(open("Data/annotators.json", "r"))
     df = df.dropna(subset=["Noor Username"])
     drop = list()
     cols = ["Username", "Race", "Gender-Career", "Sexuality", "Religion",

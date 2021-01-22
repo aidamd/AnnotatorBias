@@ -11,7 +11,7 @@ def create_dictionary():
     groups = json.load(open("Data/stereo.json", "r"))
 
     SGTs = [x.replace("\n", "") for x in
-            open("../HateSpeech/extended_SGT.txt", "r").readlines()]
+            open("../../../HateSpeech/extended_SGT.txt", "r").readlines()]
 
 
 
@@ -33,14 +33,14 @@ def create_dictionary():
                 vecs[group][word] = model[word]
             except Exception:
                 not_found[group].append(word)
-
-
+    """
     for voc in model.wv.vocab:
         for group in groups:
             for word in not_found[group]:
                 if voc.startswith(word):
                     vecs[group][word] = model[voc]
                     break
+    """
 
     for s in SGTs:
         try:
@@ -68,14 +68,47 @@ def differences():
             #avg = sum(list(vecs[group].values())) / len(vecs[group].values())
             #distances[group].append(euclidean(avg, vecs["SGT"][s]))
     #pd.DataFrame.from_dict(distances).to_csv("Data/sgt_stereotypes.csv", index=False)
-    pd.DataFrame.from_dict(distances).to_csv("Data/sgt_stereotypes.csv", index=False)
+    pd.DataFrame.from_dict(distances).to_csv("Data/sub_sgt_stereotypes.csv", index=False)
 
 def join_sgt():
     #stereo = pd.read_csv("Data/sgt_stereotypes.csv")
-    stereo = pd.read_csv("Data/sgt_stereotypes.csv")
+    stereo = pd.read_csv("Data/sub_sgt_stereotypes.csv")
     fp = pd.read_csv("../HateSpeech/biased/fp_SGT.csv")
     fp.merge(stereo, right_on="sgt", left_on="Change")[["sgt", "Frequency", "agency", "communion"]]\
         .to_csv("Data/study1_ddr.csv", index=False)
+
+def extend_disagree():
+    posts = pd.read_csv("Data/posts_fleiss.csv")
+    stereo = pd.read_csv("Data/sub_sgt_stereotypes.csv")
+
+    stereotypes = {row["sgt"]: {"competence": row["agency"], "warmth": row["communion"]}
+                   for i, row in stereo.iterrows()}
+    #id, text, hate, agreement, sgts, has_sgt, annotators
+    new_rows = {"id": list(),
+                "text": list(),
+                "hate": list(),
+                "agreement": list(),
+                "sgt": list(),
+                "competence": list(),
+                "warmth": list()}
+    for i, row in posts.iterrows():
+        if row["has_sgt"] == 1:
+            for sgt in row["sgts"][1:-1].split(", "):
+                sgt = sgt[1:-1]
+                try:
+                    new_rows["competence"].append(stereotypes[sgt]["competence"])
+                    new_rows["warmth"].append(stereotypes[sgt]["warmth"])
+                    new_rows["id"].append(row["id"])
+                    new_rows["text"].append(row["text"])
+                    new_rows["hate"].append(row["hate"])
+                    new_rows["agreement"].append(row["agreement"])
+                    new_rows["sgt"].append(sgt)
+                except Exception:
+                    continue
+
+    pd.DataFrame.from_dict(new_rows).to_csv("Data/posts_agree_stereo.csv", index=False)
+
+
 
 def visualize():
     change = pd.read_csv("../HateSpeech/biased/fp_change.csv")
@@ -102,9 +135,10 @@ def visualize():
     pd.DataFrame.from_dict(lines).to_csv("Data/study1_changes.csv", index=False)
 
 if __name__ == "__main__":
-    create_dictionary()
-    differences()
-    join_sgt()
+    #create_dictionary()
+    #differences()
+    #join_sgt()
     #visualize()
+    extend_disagree()
 
 
